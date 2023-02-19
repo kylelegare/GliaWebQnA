@@ -85,7 +85,7 @@ def answer_question(
         print(e)
         return ""
 
-st.title('OpenAI Chatbot')
+st.title('Ask The Glia Website')
 
 question = st.text_input('Ask a question:')
 if question:
