@@ -1,11 +1,14 @@
+import streamlit as st
 import os
 import pandas as pd
+import tiktoken
 import openai
+openai.api_key = os.environ["OPENAI_API_KEY"]
+from openai.embeddings_utils import distances_from_embeddings
 import numpy as np
 from openai.embeddings_utils import distances_from_embeddings, cosine_similarity
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
-df = pd.read_csv('processed/embeddings.csv', index_col=0)
+df=pd.read_csv('processed/embeddings.csv', index_col=0)
 df['embeddings'] = df['embeddings'].apply(eval).apply(np.array)
 
 def create_context(
@@ -21,19 +24,20 @@ def create_context(
     # Get the distances from the embeddings
     df['distances'] = distances_from_embeddings(q_embeddings, df['embeddings'].values, distance_metric='cosine')
 
+
     returns = []
     cur_len = 0
 
     # Sort by distance and add the text to the context until the context is too long
     for i, row in df.sort_values('distances', ascending=True).iterrows():
-
+        
         # Add the length of the text to the current length
         cur_len += row['n_tokens'] + 4
-
+        
         # If the context is too long, break
         if cur_len > max_len:
             break
-
+        
         # Else add it to the text that is being returned
         returns.append(row["text"])
 
@@ -81,8 +85,9 @@ def answer_question(
         print(e)
         return ""
 
-while True:
-    question = input("What would you like to know? ")
-    if question.lower() == "exit":
-        break
-    print(answer_question(df, question=question, debug=False))
+st.title('OpenAI Chatbot')
+
+question = st.text_input('Ask a question:')
+if question:
+    answer = answer_question(df, question=question, debug=False)
+    st.write('Answer:', answer)
